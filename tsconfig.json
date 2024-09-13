@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+      "target": "es2015",
+      "module": "esnext",
+      "jsx": "react",
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "types": ["@types/jest"],
+      "forceConsistentCasingInFileNames": true
+    },
+    "include": ["snake-game/src/**/*"],  // Adjust path to snake-game/src
+    "exclude": ["node_modules"]
+  }
+  
