@@ -10,7 +10,5 @@ export const validateGame = (req, res) => {
 
   const result = GameService.validateSnake(ticks, gameState);
 
-  console.log('this is esult    ',result)
-
   return res.status(result.status).json({ message: result.message, gameState: result.gameState });
   };

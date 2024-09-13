@@ -40,7 +40,6 @@ class GameService {
 
         if (this.checkFruitEaten(serverGameState)) {
 
-          console.log('this is eturning',this.createSuccessResponse('Fruit eaten! Score updated.', serverGameState))
           return this.createSuccessResponse('Fruit eaten! Score updated.', serverGameState);
         }
       }
@@ -60,16 +59,12 @@ class GameService {
 
   checkFruitEaten(serverGameState) {
     const { snake, fruit } = serverGameState;
-
-    console.log('snake.x ',snake.x ,'fruit.x    ',fruit.x );
-    console.log('snake.y ',snake.y ,'fruit.y    ',fruit.y );
     if (snake.x === fruit.x && snake.y === fruit.y) {
       serverGameState.score++;
       serverGameState.gameId++;
       serverGameState.fruit = getRandomPosition(serverGameState.width, serverGameState.height);
       return true;
     }
-    console.log('fruit not eaten???');
     return false;
   }
 
