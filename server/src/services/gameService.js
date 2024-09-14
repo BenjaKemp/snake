@@ -9,8 +9,6 @@ class GameService {
 
   validateSnake(ticks, clientGameState) {
 
-    console.log(ticks)
-    console.log(clientGameState)
     try {
       if (!Array.isArray(ticks) || ticks.length === 0) {
         return { status: 400, message: 'Invalid request: Moves are required.', gameState: clientGameState };
@@ -18,11 +16,6 @@ class GameService {
   
       let serverGameState = {
         ...clientGameState,
-        snake: {
-          ...clientGameState.snake,
-          x: clientGameState.gameId === 0 ? 0 : clientGameState.snake.x,
-          y: clientGameState.gameId === 0 ? 0 : clientGameState.snake.y,
-        },
       };
 
       if (this.checkInvalidTurns(ticks)) {
@@ -39,7 +32,8 @@ class GameService {
         }
 
         if (this.checkFruitEaten(serverGameState)) {
-
+          console.log('serverGameState    ',serverGameState);
+          console.log('clientGameState    ',clientGameState);
           return this.createSuccessResponse('Fruit eaten! Score updated.', serverGameState);
         }
       }
