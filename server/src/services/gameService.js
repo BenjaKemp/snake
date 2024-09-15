@@ -2,78 +2,69 @@ import { getRandomPosition } from '../utils/helpers.js';
 import { GameStateModel } from '../models/index.js';
 
 class GameService {
-
   initializeGame(width, height) {
     return GameStateModel.getInstance().initialize(width, height);
   }
 
-  validateSnake(ticks, clientGameState) {
-
+  validateSnake(ticks, gameState) {
     try {
       if (!Array.isArray(ticks) || ticks.length === 0) {
-        return { status: 400, message: 'Invalid request: Moves are required.', gameState: clientGameState };
+        return this.createErrorResponse(400, 'Invalid request: Moves are required.', gameState);
       }
-  
-      let serverGameState = {
-        ...clientGameState,
-      };
 
-      if (this.checkInvalidTurns(ticks)) {
-        return this.createErrorResponse(400, 'Invalid move: 180-degree turn not allowed.', serverGameState);
-      }
-  
-      for (let move of ticks) {
-        this.setVelocity(serverGameState.snake, move);
-        serverGameState.snake.x += serverGameState.snake.velX;
-        serverGameState.snake.y += serverGameState.snake.velY;
+      for (let i = 0; i < ticks.length; i++) {
+        const move = ticks[i];
 
-        if (this.checkBoundaryCollision(serverGameState)) {
-          return this.createErrorResponse(418, 'Game Over: Snake hit the boundary!', serverGameState);
+        if (this.checkInvalidTurn(i, ticks)) {
+          return this.createErrorResponse(418, 'Invalid move: 180-degree turn not allowed.', gameState);
         }
 
-        if (this.checkFruitEaten(serverGameState)) {
-          console.log('serverGameState    ',serverGameState);
-          console.log('clientGameState    ',clientGameState);
-          return this.createSuccessResponse('Fruit eaten! Score updated.', serverGameState);
+        this.updateSnakePosition(gameState, move);
+
+        if (this.checkBoundaryCollision(gameState)) {
+          return this.createErrorResponse(418, 'Game Over: Snake hit the boundary!', gameState);
+        }
+
+        if (this.checkFruitEaten(gameState)) {
+          return this.createSuccessResponse('Fruit eaten! Score updated.', gameState);
         }
       }
 
     } catch (error) {
-      return this.createErrorResponse(500, 'Internal server error.', clientGameState);
+      return this.createErrorResponse(500, 'Internal server error.', gameState);
     }
   }
 
-  checkBoundaryCollision(serverGameState) {
-    const { snake, width, height } = serverGameState;
-    if (snake.x < 0 || snake.x >= width || snake.y < 0 || snake.y >= height) {
-      return true;
-    }
-    return false;
+  updateSnakePosition(gameState, move) {
+    this.setVelocity(gameState.snake, move);
+    gameState.snake = {
+      ...gameState.snake,
+      x: gameState.snake.x + gameState.snake.velX,
+      y: gameState.snake.y + gameState.snake.velY,
+    };
   }
 
-  checkFruitEaten(serverGameState) {
-    const { snake, fruit } = serverGameState;
+  checkInvalidTurn(index, ticks) {
+    if (index === 0) return false;
+
+    const prevMove = ticks[index - 1];
+    const currentMove = ticks[index];
+
+    return prevMove.x * currentMove.x === -1 || prevMove.y * currentMove.y === -1;
+  }
+
+  checkBoundaryCollision(gameState) {
+    const { snake, width, height } = gameState;
+    return snake.x < 0 || snake.x >= width || snake.y < 0 || snake.y >= height;
+  }
+
+  checkFruitEaten(gameState) {
+    const { snake, fruit } = gameState;
     if (snake.x === fruit.x && snake.y === fruit.y) {
-      serverGameState.score++;
-      serverGameState.gameId++;
-      serverGameState.fruit = getRandomPosition(serverGameState.width, serverGameState.height);
+      gameState.score++;
+      gameState.gameId++;
+      gameState.fruit = getRandomPosition(gameState.width, gameState.height);
       return true;
-    }
-    return false;
-  }
-
-  checkInvalidTurns(ticks) {
-    for (let i = 1; i < ticks.length; i++) {
-      const prevMove = ticks[i - 1];
-      const currentMove = ticks[i];
-      if (
-        (prevMove.x === 1 && currentMove.x === -1) || 
-        (prevMove.x === -1 && currentMove.x === 1) ||
-        (prevMove.y === 1 && currentMove.y === -1) || 
-        (prevMove.y === -1 && currentMove.y === 1)
-      ) {
-        return true;
-      }
     }
     return false;
   }
@@ -86,20 +77,16 @@ class GameService {
   createSuccessResponse(message, gameState) {
     return {
       status: 200,
-      message: message,
-      gameState: {
-        ...gameState,
-      },
+      message,
+      gameState
     };
   }
 
   createErrorResponse(status, message, gameState) {
     return {
-      status: status,
-      message: message,
-      gameState: {
-        ...gameState,
-      },
+      status,
+      message,
+      gameState
     };
   }
 }
